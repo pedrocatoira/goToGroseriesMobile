@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type">
+
+    <title>goToGrosseries</title>    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <link rel="stylesheet" href="jquery/jquery.mobile-1.1.1.min.css">
+    <script src="jquery/jquery-1.8.2.min.js"></script>
+    <script src="jquery/jquery.mobile-1.1.1.min.js"></script>
+  </head>
+  
+  <body>
+    <script>
+        $(document).ready(function() {
+            
+           /*************************************************************
+            * load list of grosseries from the local storage
+            *************************************************************/
+          
+            var list;
+            
+            if(localStorage.getItem('list')) {
+                list = JSON.parse(localStorage.getItem('list'));
+            }
+            else {
+                //if none, then create them and save them
+                list = [
+                    {
+                        id:       1,
+                        name:     'Milk - 4l',
+                        store:    'Any',
+                        price:    '4',
+                        comments: ''
+                    }                                                      
+                ];
+                
+                //offline saving
+                localStorage.setItem('list', JSON.stringify(list));
+            }
+
+           /*************************************************************
+            * show grosseries listing on the homepage
+            *************************************************************/
+            var showGrosseries = function() {
+                //erase existing content
+                $('#grosseries_list').html('');
+                
+                //insert each grosserie
+                for(var i=0; i<list.length; i++) {                          
+                    addGrossery(list[i]);
+                }                
+            }
+            
+            
+           /*************************************************************
+            * add an element to the listview
+            *************************************************************/                          
+            var addGrossery = function(grosserieData) {
+                
+                //HTML content of one list element
+                var listElementHTML = '<li><a class="grosserie_item" href="#item' + grosserieData.id + '">' + grosserieData.name + '</a></li>';                
+                
+                //append the HTML code to the listview
+                $('#grosseries_list').append(listElementHTML);      
+                
+                //HTML code of the grosserie's content page
+                var contentPageHTML = '<div id="item' + grosserieData.id + '" data-role="page">\
+                                         <div data-role="header">\
+                                           <h1>' + grosserieData.name + '</h1>\
+                                           <a href="" data-rel="back">Back</a>\
+                                           <a href="#delete' + grosserieData.id + '" data-icon="delete" class="ui-btn-right delete_button">Delete</a>\
+                                         </div>\
+                                         <div data-role="content">\
+                                           <div data-role="collapsible" data-collapsed="false" data-theme="b">\
+                                             <h3>Stores</h3>' + grosserieData.store + '\
+                                           </div>\
+                                           <div data-role="collapsible" data-collapsed="false" data-theme="b">\
+                                             <h3>Average Price</h3>\
+                                             ' + grosserieData.price + '\
+                                           </div>\
+                                           <div data-role="collapsible" data-collapsed="false" data-theme="b">' +
+                                            '<h3>Comments</h3>\
+                                             ' + grosserieData.comments + 
+                                          '</div>' + 
+                                        '</div>\
+                                       </div>';      
+                
+                //append the page code to the end of the body
+                $('body').append(contentPageHTML);
+                
+                //refresh the listview (JQuery Mobile method)
+                $('#grosseries_list').listview("refresh");
+            };
+            
+           /*************************************************************
+            * register event to delete item - click delete button
+            *************************************************************/       
+            $('.delete_button').live('click tap', function(e) {
+                e.stopPropagation();
+              
+                var id = $(this).attr('href').substring(7);
+                //console.log(id);
+
+                //search for the position of the selected item
+                var index;
+              
+                for(var i=0;i<list.length;i++) {
+                    if(list[i].id == id) {
+                        index = i;
+                        break;
+                    }
+                }
+
+                //remove from array
+                 list.splice(index,1);                    
+
+                //save offline
+                localStorage.setItem('list', JSON.stringify(list));
+
+                //update main page
+                showGrosseries();
+                $.mobile.changePage("#homepage");
+            });
+            
+            //user input
+            $('#form_new_item').bind('submit', function(e) {
+                
+                var newItem = {
+                    id:       list.length + 1,
+                    name:     $('#item_name').val(),
+                    store:    $('#item_store option:selected').val(),
+                    price:    $('#item_price').val(),
+                    comments: $('#item_comments').val()
+                };
+                
+                list.push(newItem);
+                
+                addGrossery(newItem); 
+                
+                //save offline
+                localStorage.setItem('list', JSON.stringify(list));
+                    
+                $.mobile.changePage("#homepage");
+                return false;
+            });
+            
+            //execute function to show list
+            showGrosseries(); 
+        });
+    </script>
+    
+    <div id="homepage" data-role="page">
+      <div data-role="header">
+        <h1>goToGrosseries</h1>
+      </div>
+      
+      <!-- /header -->
+      <div data-role="content"> <a href="#add_item" data-role="button" data-theme="b">Add
+          Item</a>
+        <div style="margin:30px"></div>
+        <ul id="grosseries_list" data-role="listview" data-filter="true" data-filter-placeholder="Search">
+        </ul>
+      </div>
+      
+      <!-- /content -->
+      <div data-role="footer" data-position="fixed">
+        <div data-role="navbar" data-iconpos="bottom">
+          <ul>
+            <li><a href="#homepage" data-icon="home">Home</a></li>
+            <li><a href="#about_page" data-icon="info">About</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <!-- /page -->
+    <div id="about_page" data-role="page">
+      <div data-role="header">
+        <h1>goToGrosseries</h1>
+      </div>
+      <div data-role="content"> This is just a HTML5/CSS3/JavaScript/JQuery test
+        for mobile applications </div>
+      
+      <div data-role="footer" data-position="fixed">
+        <div data-role="navbar" data-iconpos="bottom">
+          <ul>
+            <li><a href="#homepage" data-icon="home">Home</a></li>
+            <li><a href="#about_page" data-icon="info">About</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <div data-role="page" id="add_item">
+      <div data-role="header">
+        <h1>Add Item</h1>
+        <a href="#" data-rel="back">Back</a> </div>
+      <div data-role="content">
+        <form id="form_new_item"> <input name="item_name" id="item_name" value=""
+            placeholder="Name"
+            required=""
+            type="text">
+          <select name="item_store" id="item_store" data-native-menu="false">
+            <option value="Any">Any</option>
+            <option value="Costco">Costco</option>
+            <option value="NoFrills">NoFrills</option>
+            <option value="IGA">IGA</option>
+            <option value="SuperStore">SuperStore</option>
+          </select>
+          <label for="item_price">Price</label> <input name="item_price" id="item_price"
+            value="5"
+            min="1"
+            max="120"
+            type="range">
+          <textarea name="item_comments" id="item_comments" placeholder="Additional comments..."></textarea>
+          <input value="Save" data-theme="b" type="submit"> </form>
+      </div>
+      
+      <div data-role="footer" data-position="fixed">
+        <div data-role="navbar" data-iconpos="bottom">
+          <ul>
+            <li><a href="#homepage" data-icon="home">Home</a></li>
+            <li><a href="#about_page" data-icon="info">About</a></li>
+          </ul>
+        </div>
+      </div>
+      
+    </div>
+  </body>
+</html>
